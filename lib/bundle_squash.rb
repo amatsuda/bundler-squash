@@ -17,6 +17,7 @@ class BundleSquash
 
   def initialize
     bundler = Bundler.setup
+    bundler.require
     @definition = bundler.instance_variable_get(:@definition)
     @definition.resolve
     @copied_specs = {}
