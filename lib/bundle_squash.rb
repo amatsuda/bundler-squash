@@ -40,6 +40,11 @@ class BundleSquash
   def cp_r
     $LOAD_PATH.grep(%r{/lib$}).sort.select {|lp| FileTest.directory? lp}.select do |lp|
       gem = gemname(lp)
+      if File.exists?("#{lp}/../VERSION")  # gems that have VERSION file would possibly load this file in .rb
+        puts "skipping #{gem} ..."
+        @skipped_gems << gem
+        next
+      end
       puts "copying #{lp} ..."
 
       @specs.each_pair do |group, specs|
