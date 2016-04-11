@@ -1,5 +1,6 @@
 require "bundle_squash/version"
 
-module BundleSquash
-  # Your code goes here...
+class BundleSquash
+  def self.run
+  end
 end

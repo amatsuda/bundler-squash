@@ -1,3 +1,3 @@
-module BundleSquash
+class BundleSquash
   VERSION = "0.1.0"
 end
