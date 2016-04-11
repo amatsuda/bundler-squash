@@ -5,6 +5,9 @@ require 'bundler'
 
 class BundleSquash
   DEST = './vendor/bundle_squash'
+  SKIP_GEMS = ['rake',
+               'sqlite3', 'pg', 'mysql2'  # AR calls `gem` method for them
+              ]
 
   def self.run
     b = self.new
@@ -40,7 +43,7 @@ class BundleSquash
   def cp_r
     $LOAD_PATH.grep(%r{/lib$}).sort.select {|lp| FileTest.directory? lp}.select do |lp|
       gem = gemname(lp)
-      if File.exists?("#{lp}/../VERSION")  # gems that have VERSION file would possibly load this file in .rb
+      if SKIP_GEMS.include?(gem) || File.exists?("#{lp}/../VERSION")  # gems that have VERSION file would possibly load this file in .rb
         puts "skipping #{gem} ..."
         @skipped_gems << gem
         next
