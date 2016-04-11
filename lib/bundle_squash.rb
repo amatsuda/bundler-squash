@@ -11,12 +11,14 @@ class BundleSquash
     b.bundler_dependencies_to_specs
     b.cleanup
     b.cp_r
+    b.write_gemspecs
   end
 
   def initialize
     bundler = Bundler.setup
     @definition = bundler.instance_variable_get(:@definition)
     @definition.resolve
+    @copied_specs = {}
   end
 
   def bundler_dependencies_to_specs
@@ -51,8 +53,26 @@ class BundleSquash
           %w(data vendor frameworks ui).each do |dir|
             FileUtils.cp_r "#{lp}/../#{dir}", "#{DEST}/#{group}" if File.exists?("#{lp}/../#{dir}")
           end
+          (@copied_specs[group] ||= []) << spec
         end
       end
+    end
+  end
+
+  def write_gemspecs
+    @copied_specs.keys.each do |group|
+      File.open("#{DEST}/#{group}/bundle_squash-#{group}.gemspec", 'w') {|f| f.write <<-GEMSPEC }
+# frozen_string_literal: true
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+Gem::Specification.new do |gem|
+  gem.name = 'bundle_squash-#{group}'
+  gem.version = '0'
+  gem.summary = gem.authors = ''
+  gem.require_paths = ['lib']
+end
+GEMSPEC
     end
   end
 
