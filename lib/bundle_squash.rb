@@ -16,6 +16,7 @@ class BundleSquash
   end
 
   def initialize
+    @skipped_gems = []
     bundler = Bundler.setup
     bundler.require
     @definition = bundler.instance_variable_get(:@definition)
@@ -47,6 +48,7 @@ class BundleSquash
           if (overlaps = (files_in(lp) & bundled_files_for(group))).any?
             if (same_filenames = overlaps.select {|f| !FileUtils.cmp "#{lp}#{f}", "#{DEST}/#{group}/lib#{f}"}).any?
               puts "skipping  #{lp}: these files already exist!\n #{same_filenames.inspect}"
+              @skipped_gems << gem
               next
             end
           end
