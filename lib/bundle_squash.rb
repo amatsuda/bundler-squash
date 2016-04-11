@@ -16,6 +16,7 @@ class BundleSquash
     b.cp_r
     b.write_gemspecs
     b.write_require_files
+    b.generate_gemfile
   end
 
   def initialize
@@ -115,6 +116,35 @@ GEMSPEC
     ret
   end
 
+  def generate_gemfile
+    puts; puts 'writing Gemfile.squash...'
+    original_gemfile = File.read('Gemfile').lines
+    File.open('Gemfile.squash', 'w') do |gemfile|
+      gemfile.write *original_gemfile.grep(/^\s*source\s+/)
+      @copied_specs.keys.each do |group|
+        gemfile.write "gem 'bundle_squash-#{group}', path: '#{DEST}/#{group}'"
+        gemfile.write ", group: :#{group}" unless group == [:default]
+        gemfile.write "\n"
+      end
+      original_gemfile.grep(/^\s*gem\s*['"]rails['"]/).each do |line|
+        gemfile.write line.sub('rails', 'railties')
+      end
+
+      gemfile.write "\n" if @skipped_gems.any?
+      @skipped_gems.each do |gem|
+        if (orig = original_gemfile.grep(/^\s*gem\s*['"]#{gem}['"]/)).any?
+          orig.each do |line|
+            groups_string = groups_string_for gem
+            gemfile.write "#{line.gsub(/^ */, '').chomp}#{", group: #{groups_string}" if groups_string}\n"
+          end
+        else
+          groups_string = groups_string_for gem
+          gemfile.write "gem '#{gem}'#{", group: #{groups_string}" if groups_string}\n"
+        end
+      end
+    end
+  end
+
   private
   def files_in(dir)
     Find.find(dir).select {|e| FileTest.file? e}.reject {|f| f.include?('/.git/')}.map {|f| f.sub(%r{^#{dir}}, '')}
@@ -126,5 +156,15 @@ GEMSPEC
 
   def gemname(filename)
     filename.match(%r{.*/(.*)-.*/lib}) { $1 }
+  end
+
+  def groups_string_for(gemname)
+    return if @specs[:default][gemname].any?
+    groups = @specs.keys.select {|k| @specs[k][gemname].any?}
+    if groups.one?
+      groups.first.inspect
+    elsif groups.any?
+      groups.inspect
+    end
   end
 end
