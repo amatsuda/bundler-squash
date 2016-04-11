@@ -47,6 +47,10 @@ class BundleSquash
             end
           end
           `rsync -a --exclude=.git #{lp} #{DEST}/#{group}`
+          #TODO overwrite check?
+          %w(data vendor frameworks ui).each do |dir|
+            FileUtils.cp_r "#{lp}/../#{dir}", "#{DEST}/#{group}" if File.exists?("#{lp}/../#{dir}")
+          end
         end
       end
     end
