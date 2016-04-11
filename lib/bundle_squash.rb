@@ -40,6 +40,12 @@ class BundleSquash
       @specs.each_pair do |group, specs|
         FileUtils.mkdir_p "#{DEST}/#{group}/lib"
         if (spec = specs.detect {|d| d.name == gem})
+          if (overlaps = (files_in(lp) & bundled_files_for(group))).any?
+            if (same_filenames = overlaps.select {|f| !FileUtils.cmp "#{lp}#{f}", "#{DEST}/#{group}/lib#{f}"}).any?
+              puts "skipping  #{lp}: these files already exist!\n #{same_filenames.inspect}"
+              next
+            end
+          end
           FileUtils.cp_r lp, "#{DEST}/#{group}"
         end
       end
@@ -47,6 +53,14 @@ class BundleSquash
   end
 
   private
+  def files_in(dir)
+    Find.find(dir).select {|e| FileTest.file? e}.map {|f| f.sub(%r{^#{dir}}, '')}
+  end
+
+  def bundled_files_for(group)
+    files_in "#{DEST}/#{group}/lib"
+  end
+
   def gemname(filename)
     filename.match(%r{.*/(.*)-.*/lib}) { $1 }
   end
