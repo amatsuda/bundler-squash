@@ -1,10 +1,16 @@
 require "bundle_squash/version"
+require 'fileutils'
+require 'find'
 require 'bundler'
 
 class BundleSquash
+  DEST = './vendor/bundle_squash'
+
   def self.run
     b = self.new
     b.bundler_dependencies_to_specs
+    b.cleanup
+    b.cp_r
   end
 
   def initialize
@@ -19,5 +25,29 @@ class BundleSquash
     @definition.groups.each do |group|
       @specs[group] = Bundler::SpecSet.new(@definition.specs_for([group]).to_a - @specs[:default].to_a) unless group == :default
     end
+  end
+
+  def cleanup
+    FileUtils.rm_r DEST if File.exists? DEST
+    FileUtils.mkdir_p DEST
+  end
+
+  def cp_r
+    $LOAD_PATH.grep(%r{/lib$}).sort.select {|lp| FileTest.directory? lp}.select do |lp|
+      gem = gemname(lp)
+      puts "copying #{lp} ..."
+
+      @specs.each_pair do |group, specs|
+        FileUtils.mkdir_p "#{DEST}/#{group}/lib"
+        if (spec = specs.detect {|d| d.name == gem})
+          FileUtils.cp_r lp, "#{DEST}/#{group}"
+        end
+      end
+    end
+  end
+
+  private
+  def gemname(filename)
+    filename.match(%r{.*/(.*)-.*/lib}) { $1 }
   end
 end
