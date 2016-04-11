@@ -46,7 +46,7 @@ class BundleSquash
               next
             end
           end
-          FileUtils.cp_r lp, "#{DEST}/#{group}"
+          `rsync -a --exclude=.git #{lp} #{DEST}/#{group}`
         end
       end
     end
@@ -54,7 +54,7 @@ class BundleSquash
 
   private
   def files_in(dir)
-    Find.find(dir).select {|e| FileTest.file? e}.map {|f| f.sub(%r{^#{dir}}, '')}
+    Find.find(dir).select {|e| FileTest.file? e}.reject {|f| f.include?('/.git/')}.map {|f| f.sub(%r{^#{dir}}, '')}
   end
 
   def bundled_files_for(group)
