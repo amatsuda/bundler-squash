@@ -12,6 +12,7 @@ class BundleSquash
     b.cleanup
     b.cp_r
     b.write_gemspecs
+    b.write_require_files
   end
 
   def initialize
@@ -74,6 +75,33 @@ Gem::Specification.new do |gem|
 end
 GEMSPEC
     end
+  end
+
+  def write_require_files
+    @specs.each_pair do |group, specs|
+      requires = specs.map {|s| require_string(s).map {|r| "require '#{r}'"}}.flatten.join("\n")
+      File.open("#{DEST}/#{group}/lib/bundle_squash-#{group}.rb", 'w') {|f| f.write requires + "\n"}
+    end
+  end
+
+  def require_string(spec)
+    ret = Array(spec.respond_to?(:autorequire) ? spec.autorequire : [])
+    return ret if ret.any?
+
+    begin
+      Kernel.require spec.name
+      ret << spec.name
+    rescue LoadError
+      if spec.name.include?('-')
+        namespaced_file = spec.name.gsub('-', '/')
+        begin
+          Kernel.require namespaced_file
+          ret << namespaced_file
+        rescue LoadError
+        end
+      end
+    end
+    ret
   end
 
   private
