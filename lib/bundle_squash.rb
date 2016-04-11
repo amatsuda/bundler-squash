@@ -6,7 +6,8 @@ require 'bundler'
 class BundleSquash
   DEST = './vendor/bundle_squash'
   SKIP_GEMS = ['rake',
-               'sqlite3', 'pg', 'mysql2'  # AR calls `gem` method for them
+               'sqlite3', 'pg', 'mysql2',  # AR calls `gem` method for them
+               'haml', 'sass'  # they read files outside of lib directory
               ]
 
   def self.run
