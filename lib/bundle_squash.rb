@@ -17,6 +17,7 @@ class BundleSquash
     b.write_gemspecs
     b.write_require_files
     b.generate_gemfile
+    b.install
   end
 
   def initialize
@@ -143,6 +144,10 @@ GEMSPEC
         end
       end
     end
+  end
+
+  def install
+    puts; puts `export BUNDLE_GEMFILE=Gemfile.squash && bundle`
   end
 
   private
