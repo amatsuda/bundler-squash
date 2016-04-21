@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in bundle_squash.gemspec
+# Specify your gem's dependencies in bundler-squash.gemspec
 gemspec

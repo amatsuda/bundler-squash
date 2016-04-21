@@ -1,4 +1,4 @@
 #!/usr/bin/env ruby
 
-require 'bundle_squash'
-BundleSquash.run
+require 'bundler-squash'
+Bundler::Squash.run

@@ -1,10 +1,10 @@
-require "bundle_squash/version"
+require "bundler-squash/version"
 require 'fileutils'
 require 'find'
 require 'bundler'
 
-class BundleSquash
-  DEST = './vendor/bundle_squash'
+module Bundler; class Squash
+  DEST = './vendor/bundler-squash'
   SKIP_GEMS = ['rake',
                'sqlite3', 'pg', 'mysql2',  # AR calls `gem` method for them
                'haml', 'sass'  # they read files outside of lib directory
@@ -76,13 +76,13 @@ class BundleSquash
 
   def write_gemspecs
     @copied_specs.keys.each do |group|
-      File.open("#{DEST}/#{group}/bundle_squash-#{group}.gemspec", 'w') {|f| f.write <<-GEMSPEC }
+      File.open("#{DEST}/#{group}/bundler-squash-#{group}.gemspec", 'w') {|f| f.write <<-GEMSPEC }
 # frozen_string_literal: true
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |gem|
-  gem.name = 'bundle_squash-#{group}'
+  gem.name = 'bundler-squash-#{group}'
   gem.version = '0'
   gem.summary = gem.authors = ''
   gem.require_paths = ['lib']
@@ -94,7 +94,7 @@ GEMSPEC
   def write_require_files
     @specs.each_pair do |group, specs|
       requires = specs.map {|s| require_string(s).map {|r| "require '#{r}'"}}.flatten.join("\n")
-      File.open("#{DEST}/#{group}/lib/bundle_squash-#{group}.rb", 'w') {|f| f.write requires + "\n"}
+      File.open("#{DEST}/#{group}/lib/bundler-squash-#{group}.rb", 'w') {|f| f.write requires + "\n"}
     end
   end
 
@@ -124,7 +124,7 @@ GEMSPEC
     File.open('Gemfile.squash', 'w') do |gemfile|
       gemfile.write *original_gemfile.grep(/^\s*source\s+/)
       @copied_specs.keys.each do |group|
-        gemfile.write "gem 'bundle_squash-#{group}', path: '#{DEST}/#{group}'"
+        gemfile.write "gem 'bundler-squash-#{group}', path: '#{DEST}/#{group}'"
         gemfile.write ", group: :#{group}" unless group == [:default]
         gemfile.write "\n"
       end
@@ -173,4 +173,4 @@ GEMSPEC
       groups.inspect
     end
   end
-end
+end; end
